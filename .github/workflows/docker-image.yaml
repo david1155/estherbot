@@ -1,0 +1,34 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    tags:
+      - '*'
+  release:
+    types:
+      - created
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'release' && github.event.action == 'created')
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ github.event_name == 'push' && format('david1155/estherbot:{0}', github.ref_name) || '' }}
+          ${{ github.event_name == 'release' && 'david1155/estherbot:latest' || '' }}
