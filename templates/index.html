@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Chatbot</title><script src="https://code.jquery.com/jquery-3.6.0.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script><style>body{font-family:Arial,sans-serif;margin:0;padding:0;background-color:#222;color:#fff;font-size:18px}#chat{max-width:600px;margin:50px auto;padding:20px;background-color:#333;border:1px solid #444;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);overflow-y:auto;max-height:400px}#messages{list-style-type:none;padding:0}#messages li{padding:5px 10px;margin-bottom:10px;border-radius:5px}#messages li:nth-child(odd){background-color:#444}#user-input-form{max-width:600px;margin:0 auto;display:flex;justify-content:space-between}#user-input{flex-grow:1;padding:10px;border:1px solid #ccc;border-radius:5px;background-color:#555;color:#fff}#user-input-form button{padding:10px 20px;background-color:#007bff;color:#fff;border:none;border-radius:5px;cursor:pointer}#user-input-form button:hover{background-color:#0056b3}</style></head><body><div><div id="chat"><ul id="messages"></ul></div><form id="user-input-form"><input type="text" id="user-input" autocomplete="off" autofocus><button type="submit">Send</button></form></div><script>function scrollToBottom() {
+    $('#chat').scrollTop($('#chat')[0].scrollHeight);
+}
+$(document).ready(function () {
+    const socket = io();
+
+    socket.on('assistant_response', function (data) {
+        let lastMessage = $('#messages li:last');
+        if (lastMessage.text().startsWith('Assistant:')) {
+            lastMessage.text(lastMessage.text() + data.content);
+        } else {
+            $('#messages').append('<li>Assistant: ' + data.content + '</li>');
+        }
+        scrollToBottom();
+    });
+
+    $('#user-input-form').on('submit', function (e) {
+        e.preventDefault();
+        let user_input = $('#user-input').val();
+        $('#messages').append('<li>User: ' + user_input + '</li>');
+        $('#user-input').val('');
+        scrollToBottom();
+        $.ajax({
+            type: 'POST',
+            url: '/ask',
+            data: { user_input: user_input },
+        });
+    });
+});</script></body></html>
