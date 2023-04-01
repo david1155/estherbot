@@ -97,6 +97,7 @@
         }
         $(document).ready(function () {
             const socket = io();
+            socket.emit('join', { user_uuid: user_uuid });
             socket.on('assistant_response', function (data) {
                 let lastMessage = $('#messages li:last');
                 if (lastMessage.text().startsWith('Assistant:')) {

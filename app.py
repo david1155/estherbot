@@ -5,7 +5,7 @@ import json
 import sseclient
 import os
 import threading
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 import uuid
 import logging
 import time
@@ -73,7 +73,7 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
                     response += content
                     if latest_user_input_id != user_input_id:
                         break
-                    socketio.emit('assistant_response', {'content': content})
+                    socketio.emit('assistant_response', {'content': content}, room=user_uuid)
             messages[user_uuid].append({"role": "assistant", "content": response})
         except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
             logger.error(f"Exception occurred: {e}")
@@ -83,6 +83,11 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
             time.sleep(backoff_time)
             continue
         break
+
+@socketio.on('join')
+def on_join(data):
+    user_uuid = data['user_uuid']
+    join_room(user_uuid)
 
 @app.route('/')
 def main():
