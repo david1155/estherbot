@@ -33,25 +33,21 @@ else:
     model = "gpt-4"
 
 message_queues = {}
+latest_user_input_ids = {}
 
-latest_user_input_id = None
-
-# Modified function to use message queues
 def performRequestWithStreaming(user_input, user_uuid, user_input_id):
-    global latest_user_input_id
+    global latest_user_input_ids
     global message_queues
-    # Add the new message to the back of the message queue for the user UUID
     message_queues[user_uuid].put({"role": "user", "content": user_input})
     reqUrl = 'https://api.openai.com/v1/chat/completions'
     reqHeaders = {
         'Accept': 'text/event-stream',
         'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY']
     }
-
     MAX_RETRIES = 5
     retry_count = 0
 
-    while latest_user_input_id == user_input_id and retry_count < MAX_RETRIES:
+    while latest_user_input_ids[user_uuid] == user_input_id and retry_count < MAX_RETRIES:
         try:
             # Get a list of messages in the message queue for the user UUID
             user_messages = list(message_queues[user_uuid].queue)
@@ -75,7 +71,7 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
                     content = json.loads(event.data)[
                         'choices'][0]['delta']['content']
                     response += content
-                    if latest_user_input_id != user_input_id:
+                    if latest_user_input_ids[user_uuid] != user_input_id:
                         break
                     socketio.emit('assistant_response', {'content': content}, room=user_uuid)
             # Add the response to the back of the message queue for the user UUID
@@ -95,7 +91,8 @@ def on_join(data):
     join_room(user_uuid)
     # Create a new message queue for the user UUID
     message_queues[user_uuid] = queue.Queue()
-    # Add a system message to the front of the message queue for the user UUID
+    # Add a system message to the front of
+    # the message queue for the user UUID
     message_queues[user_uuid].put({"role": "system", "content": syscont})
 
 @app.route('/')
@@ -111,11 +108,11 @@ def index(user_uuid):
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    global latest_user_input_id
+    global latest_user_input_ids
     user_input = request.form['user_input']
     user_uuid = request.form['user_uuid']
     user_input_id = uuid.uuid4()
-    latest_user_input_id = user_input_id
+    latest_user_input_ids[user_uuid] = user_input_id
     threading.Thread(target=performRequestWithStreaming,
                      args=(user_input, user_uuid, user_input_id)).start()
     return jsonify({'status': 'success'})
@@ -124,4 +121,3 @@ if __name__ == '__main__':
     socketio.run(app, debug=True)
 else:
     app = app
-
