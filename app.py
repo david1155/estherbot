@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
+from collections import defaultdict
 import requests
 import json
 import sseclient
@@ -30,15 +31,17 @@ if os.getenv('MODEL'):
 else:
     model = "gpt-4"
 
-messages = [
-    {"role": "system", "content": syscont},
-]
+messages = defaultdict(lambda: [{"role": "system", "content": syscont}])
 
 latest_user_input_id = None
 
-def performRequestWithStreaming(user_input, user_input_id):
+def performRequestWithStreaming(user_input, user_uuid, user_input_id):
     global latest_user_input_id
-    messages.append({"role": "user", "content": user_input})
+    global messages
+    if user_uuid not in messages:
+        messages[user_uuid] = [{"role": "system", "content": syscont}]
+    user_messages = messages[user_uuid]
+    user_messages.append({"role": "user", "content": user_input})
     reqUrl = 'https://api.openai.com/v1/chat/completions'
     reqHeaders = {
         'Accept': 'text/event-stream',
@@ -46,7 +49,7 @@ def performRequestWithStreaming(user_input, user_input_id):
     }
     reqBody = {
         "model": model,
-        "messages": messages,
+        "messages": user_messages,
         "temperature": temperature,
         "stream": True,
     }
@@ -71,7 +74,7 @@ def performRequestWithStreaming(user_input, user_input_id):
                     if latest_user_input_id != user_input_id:
                         break
                     socketio.emit('assistant_response', {'content': content})
-            messages.append({"role": "assistant", "content": response})
+            messages[user_uuid].append({"role": "assistant", "content": response})
         except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
             logger.error(f"Exception occurred: {e}")
             retry_count += 1
@@ -82,19 +85,25 @@ def performRequestWithStreaming(user_input, user_input_id):
         break
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def main():
+    user_uuid = str(uuid.uuid4())
+    return redirect(f'/{user_uuid}')
 
+@app.route('/<user_uuid>')
+def index(user_uuid):
+    return render_template('index.html', user_uuid=user_uuid)
 
 @app.route('/ask', methods=['POST'])
 def ask():
     global latest_user_input_id
     user_input = request.form['user_input']
+    user_uuid = request.form['user_uuid']
     user_input_id = uuid.uuid4()
     latest_user_input_id = user_input_id
     threading.Thread(target=performRequestWithStreaming,
-                     args=(user_input, user_input_id)).start()
+                     args=(user_input, user_uuid, user_input_id)).start()
     return jsonify({'status': 'success'})
+
 
 
 if __name__ == '__main__':
