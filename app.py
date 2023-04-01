@@ -8,7 +8,7 @@ from flask_socketio import SocketIO, emit
 import uuid
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 if os.getenv('SYSTEM_CONTENT'):
     syscont = os.getenv('SYSTEM_CONTENT')
