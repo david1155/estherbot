@@ -6,9 +6,14 @@ import os
 import threading
 from flask_socketio import SocketIO, emit
 import uuid
+import logging
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if os.getenv('SYSTEM_CONTENT'):
     syscont = os.getenv('SYSTEM_CONTENT')
@@ -31,7 +36,6 @@ messages = [
 
 latest_user_input_id = None
 
-
 def performRequestWithStreaming(user_input, user_input_id):
     global latest_user_input_id
     messages.append({"role": "user", "content": user_input})
@@ -46,23 +50,36 @@ def performRequestWithStreaming(user_input, user_input_id):
         "temperature": temperature,
         "stream": True,
     }
-    request = requests.post(reqUrl, stream=True,
-                            headers=reqHeaders, json=reqBody)
-    client = sseclient.SSEClient(request)
-    response = ""
-    for event in client.events():
-        if (
-            event.data != '[DONE]'
-            and 'content' in json.loads(event.data)['choices'][0]['delta']
-        ):
-            content = json.loads(event.data)[
-                'choices'][0]['delta']['content']
-            response += content
-            if latest_user_input_id != user_input_id:
-                break
-            socketio.emit('assistant_response', {'content': content})
-    messages.append({"role": "assistant", "content": response})
 
+    MAX_RETRIES = 5
+    retry_count = 0
+
+    while latest_user_input_id == user_input_id and retry_count < MAX_RETRIES:
+        try:
+            request = requests.post(reqUrl, stream=True,
+                                    headers=reqHeaders, json=reqBody, timeout=120)
+            client = sseclient.SSEClient(request)
+            response = ""
+            for event in client.events():
+                if (
+                    event.data != '[DONE]'
+                    and 'content' in json.loads(event.data)['choices'][0]['delta']
+                ):
+                    content = json.loads(event.data)[
+                        'choices'][0]['delta']['content']
+                    response += content
+                    if latest_user_input_id != user_input_id:
+                        break
+                    socketio.emit('assistant_response', {'content': content})
+            messages.append({"role": "assistant", "content": response})
+        except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
+            logger.error(f"Exception occurred: {e}")
+            retry_count += 1
+            backoff_time = 2 ** retry_count
+            logger.info(f"Retrying in {backoff_time} seconds...")
+            time.sleep(backoff_time)
+            continue
+        break
 
 @app.route('/')
 def index():
