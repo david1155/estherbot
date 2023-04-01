@@ -117,6 +117,12 @@ def ask():
                      args=(user_input, user_uuid, user_input_id)).start()
     return jsonify({'status': 'success'})
 
+@socketio.on('stop_response')
+def on_stop_response(data):
+    user_uuid = data['user_uuid']
+    global latest_user_input_ids
+    latest_user_input_ids[user_uuid] = None
+
 if __name__ == '__main__':
     socketio.run(app, debug=True)
 else:

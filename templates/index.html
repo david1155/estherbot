@@ -13,6 +13,7 @@
             user_uuid = '{{ user_uuid }}';
             localStorage.setItem('user_uuid', user_uuid);
         }
+        let current_user_input_id = null;
     </script>
     <style>
         body {
@@ -87,8 +88,10 @@
         <div id="chat">
             <ul id="messages"></ul>
         </div>
-        <form id="user-input-form"><textarea id="user-input" rows="3" autocomplete="off" autofocus></textarea><button
-                type="submit">Send</button>
+        <form id="user-input-form">
+            <textarea id="user-input" rows="3" autocomplete="off" autofocus></textarea>
+            <button id="send-button" type="submit">Send</button>
+            <button id="stop-button" type="button" style="background-color: rgb(181, 82, 82);">Stop</button>
         </form>
     </div>
     <script>
@@ -129,9 +132,12 @@
                         user_uuid: user_uuid
                     },
                 });
-
+                current_user_input_id = user_input_id;
                 e.preventDefault();
             });
+            $('#stop-button').on('click', function (e) {
+    socket.emit('stop_response', { user_uuid: user_uuid });
+});
         });
     </script>
 </body>
