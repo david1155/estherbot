@@ -17,24 +17,26 @@
     </script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Courier New", monospace;
             margin: 0;
             padding: 0;
             background-color: #222;
             color: #fff;
-            font-size: 18px
+            font-size: 16px
         }
 
         #chat {
-            max-width: 100vw;
-            margin: 50px auto;
+            max-width: 95vw;
+            margin: 50px auto 20px auto;
+            /* Set the bottom margin to 0 */
             padding: 20px;
             background-color: #333;
             border: 1px solid #444;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
             overflow-y: auto;
-            max-height: 400px
+            height: calc(100vh - 200px);
+            /* Calculate the height */
         }
 
         #messages {
@@ -53,7 +55,7 @@
         }
 
         #user-input-form {
-            max-width: 100vw;
+            max-width: 97vw;
             margin: 0 auto;
             display: flex;
             justify-content: space-between
@@ -120,6 +122,8 @@
                 }
             });
             $('#user-input-form').on('submit', function (e) {
+                e.preventDefault();
+
                 let user_input = $('#user-input').val();
                 $('#messages').append('<li>User: ' + user_input.replace(/\n/g, '<br>') + '</li>');
                 $('#user-input').val('');
@@ -133,11 +137,11 @@
                     },
                 });
                 current_user_input_id = user_input_id;
-                e.preventDefault();
             });
+
             $('#stop-button').on('click', function (e) {
-    socket.emit('stop_response', { user_uuid: user_uuid });
-});
+                socket.emit('stop_response', { user_uuid: user_uuid });
+            });
         });
     </script>
 </body>
