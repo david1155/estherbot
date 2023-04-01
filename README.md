@@ -1,6 +1,7 @@
 # Flask Chatbot with GPT-4
-
 This is a Flask-based chatbot application that uses OpenAI's GPT-4 model for generating responses. The application uses Flask-SocketIO for real-time communication between the server and the client.
+
+![Screenshot 2023-04-01 at 03 55 05](https://user-images.githubusercontent.com/64733669/229257709-d71faf13-8d64-4cf3-b4b1-3de80ad72e25.png)
 
 ## Environment Variables
 
