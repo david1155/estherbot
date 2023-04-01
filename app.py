@@ -16,7 +16,7 @@ else:
     syscont = ""
 
 if os.getenv('TEMPERATURE'):
-    temperature = os.getenv('TEMPERATURE')
+    temperature = float(os.getenv('TEMPERATURE'))
 else:
     temperature = 0.75
 
