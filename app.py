@@ -9,6 +9,7 @@ from flask_socketio import SocketIO, emit, join_room
 import uuid
 import logging
 import time
+import queue
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -31,27 +32,20 @@ if os.getenv('MODEL'):
 else:
     model = "gpt-4"
 
-messages = defaultdict(lambda: [{"role": "system", "content": syscont}])
+message_queues = {}
 
 latest_user_input_id = None
 
+# Modified function to use message queues
 def performRequestWithStreaming(user_input, user_uuid, user_input_id):
     global latest_user_input_id
-    global messages
-    if user_uuid not in messages:
-        messages[user_uuid] = [{"role": "system", "content": syscont}]
-    user_messages = messages[user_uuid]
-    user_messages.append({"role": "user", "content": user_input})
+    global message_queues
+    # Add the new message to the back of the message queue for the user UUID
+    message_queues[user_uuid].put({"role": "user", "content": user_input})
     reqUrl = 'https://api.openai.com/v1/chat/completions'
     reqHeaders = {
         'Accept': 'text/event-stream',
         'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY']
-    }
-    reqBody = {
-        "model": model,
-        "messages": user_messages,
-        "temperature": temperature,
-        "stream": True,
     }
 
     MAX_RETRIES = 5
@@ -59,6 +53,16 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
 
     while latest_user_input_id == user_input_id and retry_count < MAX_RETRIES:
         try:
+            # Get a list of messages in the message queue for the user UUID
+            user_messages = list(message_queues[user_uuid].queue)
+            # Construct the request body using the list of messages
+            reqBody = {
+                "model": model,
+                "messages": user_messages,
+                "temperature": temperature,
+                "stream": True,
+            }
+            # Send the request to the OpenAI API
             request = requests.post(reqUrl, stream=True,
                                     headers=reqHeaders, json=reqBody, timeout=120)
             client = sseclient.SSEClient(request)
@@ -74,7 +78,8 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
                     if latest_user_input_id != user_input_id:
                         break
                     socketio.emit('assistant_response', {'content': content}, room=user_uuid)
-            messages[user_uuid].append({"role": "assistant", "content": response})
+            # Add the response to the back of the message queue for the user UUID
+            message_queues[user_uuid].put({"role": "assistant", "content": response})
         except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
             logger.error(f"Exception occurred: {e}")
             retry_count += 1
@@ -88,6 +93,10 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
 def on_join(data):
     user_uuid = data['user_uuid']
     join_room(user_uuid)
+    # Create a new message queue for the user UUID
+    message_queues[user_uuid] = queue.Queue()
+    # Add a system message to the front of the message queue for the user UUID
+    message_queues[user_uuid].put({"role": "system", "content": syscont})
 
 @app.route('/')
 def main():
@@ -111,9 +120,8 @@ def ask():
                      args=(user_input, user_uuid, user_input_id)).start()
     return jsonify({'status': 'success'})
 
-
-
 if __name__ == '__main__':
     socketio.run(app, debug=True)
 else:
     app = app
+
