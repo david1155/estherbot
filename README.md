@@ -4,7 +4,7 @@ This is a Flask-based chatbot application that uses OpenAI's GPT-4 model for gen
 
 ## Environment Variables
 
-- `SYSTEM_CONTENT`: Configuration of the server, e.g. "Act as a helpful bot" (Optional)
+- `SYSTEM_CONTENT`: Configuration of the chat bot, e.g. "Act as a sales bot. Try to collect name, company and phone number. My company Acme Inc. info: " (Optional)
 - `TEMPERATURE`: Controls the randomness of the model's output. Higher values (e.g., 2) make the output more random, while lower values (e.g., 0) make it more deterministic. Default is 0.75.
 - `MODEL`: The name of the OpenAI model to use. Default is "gpt-4".
 - `OPENAI_API_KEY`: Your OpenAI API key, which can be obtained from the OpenAI website.
