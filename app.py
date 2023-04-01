@@ -87,6 +87,8 @@ def performRequestWithStreaming(user_input, user_uuid, user_input_id):
 @app.route('/')
 def main():
     user_uuid = str(uuid.uuid4())
+    logger.info(f"New user_uuid: {user_uuid}")
+    logger.info(f"HTTP Headers: {request.headers}")
     return redirect(f'/{user_uuid}')
 
 @app.route('/<user_uuid>')
