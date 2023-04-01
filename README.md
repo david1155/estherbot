@@ -1,33 +1,35 @@
 # Flask Chatbot with GPT-4
+
 This is a Flask-based chatbot application that uses OpenAI's GPT-4 model for generating responses. The application uses Flask-SocketIO for real-time communication between the server and the client.
 
-![Screenshot 2023-04-01 at 03 55 05](https://user-images.githubusercontent.com/64733669/229257709-d71faf13-8d64-4cf3-b4b1-3de80ad72e25.png)
+![Screenshot 2023-04-01 at 04 10 44](https://user-images.githubusercontent.com/64733669/229258400-bd8963a9-9bfb-42c6-b3cf-c552ed56a063.png)
 
 ## Environment Variables
 
-- 'SYSTEM_CONTENT': Configuration of the chat bot, e.g. 'Act as a sales bot. Try to collect name, company and phone number. My company Acme Inc. info: ' (Optional)
-- 'TEMPERATURE': Controls the randomness of the model's output. Higher values (e.g., 2) make the output more random, while lower values (e.g., 0) make it more deterministic. Default is 0.75.
-- 'MODEL': The name of the OpenAI model to use. Default is 'gpt-4'.
-- 'OPENAI_API_KEY': Your OpenAI API key, which can be obtained from the OpenAI website.
+- `SYSTEM_CONTENT`: Configuration of the chat bot, e.g. "Act as a sales bot. Try to collect name, company and phone number. My company Acme Inc. info: " (Optional)
+- `TEMPERATURE`: Controls the randomness of the model's output. Higher values (e.g., 2) make the output more random, while lower values (e.g., 0) make it more deterministic. Default is 0.75.
+- `MODEL`: The name of the OpenAI model to use. Default is "gpt-4".
+- `OPENAI_API_KEY`: Your OpenAI API key, which can be obtained from the OpenAI website.
 
 ## Running the Application with Docker
 
 1. Pull the Docker image:
 
-   '''
+   ```
    docker pull david1155/estherbot:latest
-   '''
+   ```
 
 2. Run the Docker container:
 
-   '''
-   docker run -d -p 5000:5000 -e OPENAI_API_KEY=your_api_key -e SYSTEM_CONTENT='Act as a helpful chatbot' -e TEMPERATURE=0 -e MODEL='gpt-3.5-turbo' david1155/estherbot:latest
-   '''
+   ```
+   docker run -d -p 5000:5000 -e OPENAI_API_KEY=your_api_key -e SYSTEM_CONTENT="Act as a helpful chatbot" -e TEMPERATURE=0 -e MODEL="gpt-3.5-turbo" david1155/estherbot:latest
+   ```
 
-   Replace 'your_api_key' with your OpenAI API key, and adjust other environment variables as needed.
+   Replace `your_api_key` with your OpenAI API key, and adjust other environment variables as needed.
 
-3. Access the application in your browser at 'http://localhost:5000'.
+3. Access the application in your browser at `http://localhost:5000`.
 
 ## Obtaining an OpenAI API Key
 
 To obtain an API key for GPT-4, visit the [OpenAI website](https://platform.openai.com/) and sign up for an account. Once you have an account, you can access your API key from the dashboard.
+
