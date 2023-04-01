@@ -1,10 +1,11 @@
 # Flask Chatbot with GPT-4
-
 This is a Flask-based chatbot application that uses OpenAI's GPT-4 model for generating responses. The application uses Flask-SocketIO for real-time communication between the server and the client.
+
+![Screenshot 2023-04-01 at 03 55 05](https://user-images.githubusercontent.com/64733669/229257709-d71faf13-8d64-4cf3-b4b1-3de80ad72e25.png)
 
 ## Environment Variables
 
-- `SYSTEM_CONTENT`: Configuration of the server, e.g. "Act as a helpful bot" (Optional)
+- `SYSTEM_CONTENT`: Configuration of the chat bot, e.g. "Act as a sales bot. Try to collect name, company and phone number. My company Acme Inc. info: " (Optional)
 - `TEMPERATURE`: Controls the randomness of the model's output. Higher values (e.g., 2) make the output more random, while lower values (e.g., 0) make it more deterministic. Default is 0.75.
 - `MODEL`: The name of the OpenAI model to use. Default is "gpt-4".
 - `OPENAI_API_KEY`: Your OpenAI API key, which can be obtained from the OpenAI website.
