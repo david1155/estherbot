@@ -17,21 +17,13 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-if os.getenv('SYSTEM_CONTENT'):
-    syscont = os.getenv('SYSTEM_CONTENT')
-else:
-    syscont = ""
-
+syscont = os.getenv('SYSTEM_CONTENT') if os.getenv('SYSTEM_CONTENT') else ""
 if os.getenv('TEMPERATURE'):
     temperature = float(os.getenv('TEMPERATURE'))
 else:
     temperature = 0.75
 
-if os.getenv('MODEL'):
-    model = os.getenv('MODEL')
-else:
-    model = "gpt-4"
-
+model = os.getenv('MODEL') if os.getenv('MODEL') else "gpt-4"
 message_queues = {}
 latest_user_input_ids = {}
 
